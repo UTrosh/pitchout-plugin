@@ -1,0 +1,6 @@
+name: pitchout
+author: utrosh
+version: 1.0
+main: fr.utrosh.pitchoutv2.Main
+commands:
+  pitchout:
