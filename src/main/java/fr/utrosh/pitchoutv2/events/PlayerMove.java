@@ -1,9 +1,8 @@
 package fr.utrosh.pitchoutv2.events;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Random;
-import fr.utrosh.pitchoutv2.Main;
+
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -16,190 +15,171 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 
+import fr.utrosh.pitchoutv2.Main;
+
 public class PlayerMove implements Listener {
-   Main main;
+	Main main;
 
-   public PlayerMove(Main main) {
-      this.main = main;
-   }
+	public PlayerMove(Main main) {
+		this.main = main;
+	}
 
-   @EventHandler
-   public void onMove(PlayerMoveEvent e) {
-      final Player p = e.getPlayer();
-      if (this.main.utils.getGameState() == 1) {
-         if (this.main.utils.players.contains(p) && this.main.utils.getPosA().getBlockY() - 5 == p.getLocation().getBlockY()) {
-            Player w;
-            Iterator var4;
-            if (p.getHealthScale() == 2.0D) {
-               p.setHealthScale(20.0D);
-               p.setHealth(20.0D);
-               this.main.utils.players.remove(p);
-               this.main.utils.spectators.add(p);
-               --this.main.utils.one;
-               ++this.main.utils.death;
-               if (this.main.language.equalsIgnoreCase("en")) {
-                  Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §4" + p.getName() + " §7fell into the void.");
-               }
+	@EventHandler
+	public void onMove(PlayerMoveEvent e) {
+		final Player p = e.getPlayer();
+		if (this.main.utils.getGameState() == 1) {
+			if (this.main.utils.players.contains(p) && this.main.utils.getPosA().getBlockY() - 5 == p.getLocation().getBlockY()) {
+				if (p.getHealthScale() == 2.0D) {
+					p.setHealthScale(20.0D);
+					p.setHealth(20.0D);
+					this.main.utils.players.remove(p);
+					this.main.utils.spectators.add(p);
+					--this.main.utils.one;
+					++this.main.utils.death;
+					if (this.main.language.equalsIgnoreCase("en")) {
+						Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §4" + p.getName() + " §7fell into the void.");
+					}
 
-               if (this.main.language.equalsIgnoreCase("fr")) {
-                  Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §4" + p.getName() + " §7est tombé dans le vide.");
-               }
+					if (this.main.language.equalsIgnoreCase("fr")) {
+						Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §4" + p.getName() + " §7est tombé dans le vide.");
+					}
 
-               var4 = Bukkit.getOnlinePlayers().iterator();
+					Bukkit.getOnlinePlayers().forEach(all -> all.playSound(all.getLocation(), Sound.WITHER_SPAWN, 5.0F, 1.0F));
 
-               while(var4.hasNext()) {
-                  w = (Player)var4.next();
-                  w.playSound(w.getLocation(), Sound.WITHER_SPAWN, 5.0F, 1.0F);
-               }
+					p.setGameMode(GameMode.SPECTATOR);
+					p.getInventory().clear();
+					p.setPlayerListName("§f" + p.getName());
+					p.teleport(new Location((World) Bukkit.getWorlds().get(0), this.main.x, this.main.y, this.main.z, (float) this.main.yaw, (float) this.main.pitch));
+					if (this.main.utils.players.size() == 1) {
+						for (Player all : this.main.utils.players) {
+							if (this.main.language.equalsIgnoreCase("en")) {
+								Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §a§l§k!§e§l§k!§b§l§k! §a" + p.getName() + " §ewins. §6§lCongratulations ! §a§l§k!§e§l§k!§b§l§k!");
+							}
 
-               p.setGameMode(GameMode.SPECTATOR);
-               p.getInventory().clear();
-               p.setPlayerListName("§f" + p.getName());
-               p.teleport(new Location((World)Bukkit.getWorlds().get(0), this.main.x, this.main.y, this.main.z, (float)this.main.yaw, (float)this.main.pitch));
-               if (this.main.utils.players.size() == 1) {
-                  var4 = this.main.utils.players.iterator();
+							if (this.main.language.equalsIgnoreCase("fr")) {
+								Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §a§l§k!§e§l§k!§b§l§k! §a" + p.getName() + " §egagne. §6§lFélicitations ! §a§l§k!§e§l§k!§b§l§k!");
+							}
 
-                  while(var4.hasNext()) {
-                     w = (Player)var4.next();
-                     if (this.main.language.equalsIgnoreCase("en")) {
-                        Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §a§l§k!§e§l§k!§b§l§k! §a" + w.getName() + " §ewins. §6§lCongratulations ! §a§l§k!§e§l§k!§b§l§k!");
-                     }
+							all.setHealthScale(20.0D);
+							all.setHealth(20.0D);
+							this.main.utils.setGameState(2);
+							Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), () -> {
+								for(Player player : Bukkit.getOnlinePlayers())  {
+									if (!main.backhub) {
+										if (main.language.equalsIgnoreCase("en")) {
+											player.kickPlayer("§6§lThe game is over\nCongratulations to §e" + p.getName());
+										}
 
-                     if (this.main.language.equalsIgnoreCase("fr")) {
-                        Bukkit.broadcastMessage(this.main.utils.getPrefix() + " §a§l§k!§e§l§k!§b§l§k! §a" + w.getName() + " §egagne. §6§lFélicitations ! §a§l§k!§e§l§k!§b§l§k!");
-                     }
+										if (main.language.equalsIgnoreCase("fr")) {
+											player.kickPlayer("§6§lLa partie est terminée\nFélicitations à §e" + p.getName());
+										}
 
-                     w.setHealthScale(20.0D);
-                     w.setHealth(20.0D);
-                     this.main.utils.setGameState(2);
-                     Player finalW = w;
-                     Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
-                        public void run() {
-                           Iterator var2 = Bukkit.getOnlinePlayers().iterator();
+										Bukkit.getServer().reload();
+									} else {
+										main.sendToHub(all);
+										Bukkit.getServer().reload();
+									}
+								}
+							}, 150L);
+						}
+					}
+				} else {
+					Bukkit.getOnlinePlayers().forEach(all -> all.playSound(all.getLocation(), Sound.FIREWORK_BLAST, 5.0F, 2.0F));
 
-                           while(var2.hasNext()) {
-                              Player all = (Player)var2.next();
-                              if (!PlayerMove.this.main.backhub) {
-                                 if (PlayerMove.this.main.language.equalsIgnoreCase("en")) {
-                                    all.kickPlayer("§6§lThe game is over\nCongratulations to §e" + finalW.getName());
-                                 }
+					ArrayList<Location> pos = new ArrayList<>();
+					pos.add(this.main.utils.getPosA());
+					pos.add(this.main.utils.getPosB());
+					pos.add(this.main.utils.getPosC());
+					pos.add(this.main.utils.getPosD());
+					pos.add(this.main.utils.getPosE());
+					pos.add(this.main.utils.getPosF());
+					pos.add(this.main.utils.getPosG());
+					pos.add(this.main.utils.getPosH());
+					pos.add(this.main.utils.getPosI());
+					pos.add(this.main.utils.getPosJ());
+					Random ran = new Random();
+					Location loc = pos.get(ran.nextInt(pos.size()));
+					p.teleport(loc);
+					p.setHealthScale(p.getHealthScale() - 2.0D);
+					if (p.getHealthScale() == 8.0D) {
+						p.setPlayerListName("§a" + p.getName());
+						--this.main.utils.five;
+						++this.main.utils.four;
+					}
 
-                                 if (PlayerMove.this.main.language.equalsIgnoreCase("fr")) {
-                                    all.kickPlayer("§6§lLa partie est terminée\nFélicitations à §e" + finalW.getName());
-                                 }
+					if (p.getHealthScale() == 6.0D) {
+						p.setPlayerListName("§e" + p.getName());
+						--this.main.utils.four;
+						++this.main.utils.three;
+					}
 
-                                 Bukkit.getServer().reload();
-                              } else {
-                                 PlayerMove.this.main.sendToHub(all);
-                                 Bukkit.getServer().reload();
-                              }
-                           }
+					if (p.getHealthScale() == 4.0D) {
+						p.setPlayerListName("§6" + p.getName());
+						--this.main.utils.three;
+						++this.main.utils.two;
+					}
 
-                        }
-                     }, 150L);
-                  }
-               }
-            } else {
-               var4 = Bukkit.getOnlinePlayers().iterator();
+					if (p.getHealthScale() == 2.0D) {
+						p.setPlayerListName("§c" + p.getName());
+						--this.main.utils.two;
+						++this.main.utils.one;
+					}
 
-               while(var4.hasNext()) {
-                  w = (Player)var4.next();
-                  w.playSound(p.getLocation(), Sound.FIREWORK_BLAST, 5.0F, 2.0F);
-               }
+					if (this.main.language.equalsIgnoreCase("en")) {
+						this.main.utils.sendActionBar(p, "§6Anti spawn kill : 3 seconds");
+					}
 
-               ArrayList<Location> pos = new ArrayList();
-               pos.add(this.main.utils.getPosA());
-               pos.add(this.main.utils.getPosB());
-               pos.add(this.main.utils.getPosC());
-               pos.add(this.main.utils.getPosD());
-               pos.add(this.main.utils.getPosE());
-               pos.add(this.main.utils.getPosF());
-               pos.add(this.main.utils.getPosG());
-               pos.add(this.main.utils.getPosH());
-               pos.add(this.main.utils.getPosI());
-               pos.add(this.main.utils.getPosJ());
-               Random ran = new Random();
-               Location loc = (Location)pos.get(ran.nextInt(pos.size()));
-               p.teleport(loc);
-               p.setHealthScale(p.getHealthScale() - 2.0D);
-               if (p.getHealthScale() == 8.0D) {
-                  p.setPlayerListName("§a" + p.getName());
-                  --this.main.utils.five;
-                  ++this.main.utils.four;
-               }
+					if (this.main.language.equalsIgnoreCase("fr")) {
+						this.main.utils.sendActionBar(p, "§6Anti spawn kill : 3 secondes");
+					}
 
-               if (p.getHealthScale() == 6.0D) {
-                  p.setPlayerListName("§e" + p.getName());
-                  --this.main.utils.four;
-                  ++this.main.utils.three;
-               }
+					p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -3));
+					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
+						public void run() {
+							if (main.language.equalsIgnoreCase("en")) {
+								main.utils.sendActionBar(p, "§6Anti spawn kill : 2 seconds");
+							}
 
-               if (p.getHealthScale() == 4.0D) {
-                  p.setPlayerListName("§6" + p.getName());
-                  --this.main.utils.three;
-                  ++this.main.utils.two;
-               }
+							if (main.language.equalsIgnoreCase("fr")) {
+								main.utils.sendActionBar(p, "§6Anti spawn kill : 2 secondes");
+							}
 
-               if (p.getHealthScale() == 2.0D) {
-                  p.setPlayerListName("§c" + p.getName());
-                  --this.main.utils.two;
-                  ++this.main.utils.one;
-               }
+							p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -2));
+						}
+					}, 20L);
+					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
+						public void run() {
+							if (main.language.equalsIgnoreCase("en")) {
+								main.utils.sendActionBar(p, "§6Anti spawn kill : 1 second");
+							}
 
-               if (this.main.language.equalsIgnoreCase("en")) {
-                  this.main.utils.sendActionBar(p, "§6Anti spawn kill : 3 seconds");
-               }
+							if (main.language.equalsIgnoreCase("fr")) {
+								main.utils.sendActionBar(p, "§6Anti spawn kill : 1 seconde");
+							}
 
-               if (this.main.language.equalsIgnoreCase("fr")) {
-                  this.main.utils.sendActionBar(p, "§6Anti spawn kill : 3 secondes");
-               }
+							p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -1));
+						}
+					}, 40L);
+					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
+						public void run() {
+							main.utils.sendActionBar(p, "");
+							p.getInventory().remove(Material.REDSTONE);
+						}
+					}, 60L);
+				}
+			}
+		} else if (this.main.y - 5.0D == (double) p.getLocation().getBlockY() || this.main.y - 10.0D == (double) p.getLocation().getBlockY()
+				|| this.main.y - 15.0D == (double) p.getLocation().getBlockY() || this.main.y - 20.0D == (double) p.getLocation().getBlockY()) {
+			if (this.main.language.equalsIgnoreCase("en")) {
+				p.sendMessage(this.main.utils.getPrefix() + " §cDo not go that far! :O");
+			}
 
-               p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -3));
-               Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
-                  public void run() {
-                     if (PlayerMove.this.main.language.equalsIgnoreCase("en")) {
-                        PlayerMove.this.main.utils.sendActionBar(p, "§6Anti spawn kill : 2 seconds");
-                     }
+			if (this.main.language.equalsIgnoreCase("fr")) {
+				p.sendMessage(this.main.utils.getPrefix() + " §cNe pars pas si loin! :O");
+			}
 
-                     if (PlayerMove.this.main.language.equalsIgnoreCase("fr")) {
-                        PlayerMove.this.main.utils.sendActionBar(p, "§6Anti spawn kill : 2 secondes");
-                     }
+			p.teleport(new Location((World) Bukkit.getWorlds().get(0), this.main.x, this.main.y, this.main.z, (float) this.main.yaw, (float) this.main.pitch));
+		}
 
-                     p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -2));
-                  }
-               }, 20L);
-               Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
-                  public void run() {
-                     if (PlayerMove.this.main.language.equalsIgnoreCase("en")) {
-                        PlayerMove.this.main.utils.sendActionBar(p, "§6Anti spawn kill : 1 second");
-                     }
-
-                     if (PlayerMove.this.main.language.equalsIgnoreCase("fr")) {
-                        PlayerMove.this.main.utils.sendActionBar(p, "§6Anti spawn kill : 1 seconde");
-                     }
-
-                     p.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -1));
-                  }
-               }, 40L);
-               Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(this.main.getInstance(), new Runnable() {
-                  public void run() {
-                     PlayerMove.this.main.utils.sendActionBar(p, "");
-                     p.getInventory().remove(Material.REDSTONE);
-                  }
-               }, 60L);
-            }
-         }
-      } else if (this.main.y - 5.0D == (double)p.getLocation().getBlockY() || this.main.y - 10.0D == (double)p.getLocation().getBlockY() || this.main.y - 15.0D == (double)p.getLocation().getBlockY() || this.main.y - 20.0D == (double)p.getLocation().getBlockY()) {
-         if (this.main.language.equalsIgnoreCase("en")) {
-            p.sendMessage(this.main.utils.getPrefix() + " §cDo not go that far! :O");
-         }
-
-         if (this.main.language.equalsIgnoreCase("fr")) {
-            p.sendMessage(this.main.utils.getPrefix() + " §cNe pars pas si loin! :O");
-         }
-
-         p.teleport(new Location((World)Bukkit.getWorlds().get(0), this.main.x, this.main.y, this.main.z, (float)this.main.yaw, (float)this.main.pitch));
-      }
-
-   }
+	}
 }

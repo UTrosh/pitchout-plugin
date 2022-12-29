@@ -1,18 +1,9 @@
-package fr.utrosh.pitchoutv2;
+package fr.utrosh.pitchoutv2.utils;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Random;
-import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
-import net.minecraft.server.v1_8_R3.PacketPlayOutPlayerListHeaderFooter;
-import net.minecraft.server.v1_8_R3.PacketPlayOutTitle;
-import net.minecraft.server.v1_8_R3.PlayerConnection;
-import net.minecraft.server.v1_8_R3.IChatBaseComponent.ChatSerializer;
-import net.minecraft.server.v1_8_R3.PacketPlayOutTitle.EnumTitleAction;
+
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -21,13 +12,18 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import fr.utrosh.pitchoutv2.Main;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent;
+import net.minecraft.server.v1_8_R3.IChatBaseComponent.ChatSerializer;
+import net.minecraft.server.v1_8_R3.PacketPlayOutChat;
+
 public class Utils {
    Main main;
    public String prefix;
    private int gameState;
    public int countdown = 31;
-   public ArrayList<Player> players = new ArrayList();
-   public ArrayList<Player> spectators = new ArrayList();
+   public ArrayList<Player> players = new ArrayList<>();
+   public ArrayList<Player> spectators = new ArrayList<>();
    public int onlinePlayers;
    public int five;
    public int four;
@@ -83,14 +79,11 @@ public class Utils {
    }
 
    public void start() {
-      Iterator var2 = Bukkit.getOnlinePlayers().iterator();
-
-      while(var2.hasNext()) {
-         final Player all = (Player)var2.next();
+      for(Player all : Bukkit.getOnlinePlayers()) {
          all.setLevel(0);
          all.setExp(0.0F);
          all.getInventory().clear();
-         ArrayList<Location> pos = new ArrayList();
+         ArrayList<Location> pos = new ArrayList<>();
          pos.add(this.main.utils.getPosA());
          pos.add(this.main.utils.getPosB());
          pos.add(this.main.utils.getPosC());
@@ -122,18 +115,16 @@ public class Utils {
          all.setPlayerListName("§b" + all.getName());
          this.five = this.players.size();
          all.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -3));
-         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Bukkit.getServer().getPluginManager().getPlugin("PitchOut"), new Runnable() {
-            public void run() {
-               if (Utils.this.main.language.equalsIgnoreCase("en")) {
-                  Utils.this.main.utils.sendActionBar(all, "§6Anti spawn kill : 2 seconds");
-               }
+         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Bukkit.getServer().getPluginManager().getPlugin("PitchOut"), () -> {
+           if (Utils.this.main.language.equalsIgnoreCase("en")) {
+              Utils.this.main.utils.sendActionBar(all, "§6Anti spawn kill : 2 seconds");
+           }
 
-               if (Utils.this.main.language.equalsIgnoreCase("fr")) {
-                  Utils.this.main.utils.sendActionBar(all, "§6Anti spawn kill : 2 secondes");
-               }
+           if (Utils.this.main.language.equalsIgnoreCase("fr")) {
+              Utils.this.main.utils.sendActionBar(all, "§6Anti spawn kill : 2 secondes");
+           }
 
-               all.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -2));
-            }
+           all.getInventory().setItem(4, new ItemStack(Material.REDSTONE, -2));
          }, 20L);
          Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(Bukkit.getServer().getPluginManager().getPlugin("PitchOut"), new Runnable() {
             public void run() {
@@ -159,11 +150,11 @@ public class Utils {
    }
 
    public Location getPosA() {
-      return new Location((World)Bukkit.getWorlds().get(0), this.ax, this.ay, this.az);
+      return new Location(Bukkit.getWorlds().get(0), this.ax, this.ay, this.az);
    }
 
    public Location getPosB() {
-      return new Location((World)Bukkit.getWorlds().get(0), this.bx, this.by, this.bz);
+      return new Location(Bukkit.getWorlds().get(0), this.bx, this.by, this.bz);
    }
 
    public Location getPosC() {
@@ -196,76 +187,6 @@ public class Utils {
 
    public Location getPosJ() {
       return new Location((World)Bukkit.getWorlds().get(0), this.jx, this.jy, this.jz);
-   }
-
-   public void sendTitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String message) {
-      this.sendTitle(player, fadeIn, stay, fadeOut, message, (String)null);
-   }
-
-   /** @deprecated */
-   @Deprecated
-   public void sendSubtitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String message) {
-      this.sendTitle(player, fadeIn, stay, fadeOut, (String)null, message);
-   }
-
-   /** @deprecated */
-   @Deprecated
-   public void sendFullTitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String title, String subtitle) {
-      this.sendTitle(player, fadeIn, stay, fadeOut, title, subtitle);
-   }
-
-   public void sendTitle(Player player, Integer fadeIn, Integer stay, Integer fadeOut, String title, String subtitle) {
-      PlayerConnection connection = ((CraftPlayer)player).getHandle().playerConnection;
-      PacketPlayOutTitle packetPlayOutTimes = new PacketPlayOutTitle(EnumTitleAction.TIMES, (IChatBaseComponent)null, fadeIn, stay, fadeOut);
-      connection.sendPacket(packetPlayOutTimes);
-      IChatBaseComponent titlemain;
-      PacketPlayOutTitle packetPlayOutTitle;
-      if (subtitle != null) {
-         subtitle = subtitle.replaceAll("%player%", player.getDisplayName());
-         subtitle = ChatColor.translateAlternateColorCodes('&', subtitle);
-         titlemain = ChatSerializer.a("{\"text\": \"" + subtitle + "\"}");
-         packetPlayOutTitle = new PacketPlayOutTitle(EnumTitleAction.SUBTITLE, titlemain);
-         connection.sendPacket(packetPlayOutTitle);
-      }
-
-      if (title != null) {
-         title = title.replaceAll("%player%", player.getDisplayName());
-         title = ChatColor.translateAlternateColorCodes('&', title);
-         titlemain = ChatSerializer.a("{\"text\": \"" + title + "\"}");
-         packetPlayOutTitle = new PacketPlayOutTitle(EnumTitleAction.TITLE, titlemain);
-         connection.sendPacket(packetPlayOutTitle);
-      }
-
-   }
-
-   public void sendTabTitle(Player player, String header, String footer) {
-      if (header == null) {
-         header = "";
-      }
-
-      header = ChatColor.translateAlternateColorCodes('&', header);
-      if (footer == null) {
-         footer = "";
-      }
-
-      footer = ChatColor.translateAlternateColorCodes('&', footer);
-      header = header.replaceAll("%player%", player.getDisplayName());
-      footer = footer.replaceAll("%player%", player.getDisplayName());
-      PlayerConnection connection = ((CraftPlayer)player).getHandle().playerConnection;
-      IChatBaseComponent tabTitle = ChatSerializer.a("{\"text\": \"" + header + "\"}");
-      IChatBaseComponent tabFoot = ChatSerializer.a("{\"text\": \"" + footer + "\"}");
-      PacketPlayOutPlayerListHeaderFooter headerPacket = new PacketPlayOutPlayerListHeaderFooter(tabTitle);
-
-      try {
-         Field field = headerPacket.getClass().getDeclaredField("b");
-         field.setAccessible(true);
-         field.set(headerPacket, tabFoot);
-      } catch (Exception var12) {
-         var12.printStackTrace();
-      } finally {
-         connection.sendPacket(headerPacket);
-      }
-
    }
 
    public void sendActionBar(Player player, String message) {
